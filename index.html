@@ -8,47 +8,72 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin-top: 100px;
+            padding: 50px;
+            background: #f5f5f5;
+        }
+        h1 {
+            color: #232f3e;
         }
         button {
             padding: 15px 30px;
             font-size: 18px;
-            cursor: pointer;
-            background-color: #0073bb;
+            background-color: #FF9900;
             color: white;
             border: none;
             border-radius: 5px;
+            cursor: pointer;
         }
-        #output {
-            margin-top: 30px;
+        button:hover {
+            background-color: #e68a00;
+        }
+        #status {
+            margin-top: 20px;
             font-size: 16px;
+        }
+        #status.success {
             color: green;
+        }
+        #status.error {
+            color: red;
         }
     </style>
 </head>
 <body>
     <h1>AWS One-Click Deploy</h1>
+    <p>Click the button to deploy your GitHub repo to AWS via Lambda & CodePipeline</p>
     <button id="deployBtn">Deploy to AWS</button>
-    <div id="output"></div>
+    <div id="status"></div>
 
     <script>
-        const apiURL = "https://z18blwec7b.execute-api.eu-north-1.amazonaws.com/prod/deploy"; // Your API Gateway URL
+        const deployBtn = document.getElementById('deployBtn');
+        const statusDiv = document.getElementById('status');
 
-        document.getElementById('deployBtn').addEventListener('click', async () => {
-            document.getElementById('output').innerText = "Deploying...";
-            try {
-                const response = await fetch(apiURL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({})
-                });
-                const data = await response.json();
-                document.getElementById('output').innerText = JSON.stringify(data, null, 2);
-            } catch (err) {
-                document.getElementById('output').innerText = "Error: " + err.message;
-            }
+        deployBtn.addEventListener('click', () => {
+            statusDiv.textContent = "Deploying...";
+            statusDiv.className = "";
+
+            fetch("https://z18blwec7b.execute-api.eu-north-1.amazonaws.com/prod/deploy", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.body) {
+                    statusDiv.textContent = data.body;
+                    statusDiv.className = "success";
+                } else {
+                    statusDiv.textContent = "Deployment triggered successfully!";
+                    statusDiv.className = "success";
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                statusDiv.textContent = "Error deploying. Check console for details.";
+                statusDiv.className = "error";
+            });
         });
     </script>
 </body>
