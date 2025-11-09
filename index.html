@@ -1,80 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AWS One-Click Deploy</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            background: #f5f5f5;
-        }
-        h1 {
-            color: #232f3e;
-        }
-        button {
-            padding: 15px 30px;
-            font-size: 18px;
-            background-color: #FF9900;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #e68a00;
-        }
-        #status {
-            margin-top: 20px;
-            font-size: 16px;
-        }
-        #status.success {
-            color: green;
-        }
-        #status.error {
-            color: red;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWS One-Click Deploy</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      color: #333;
+    }
+    button {
+      padding: 15px 30px;
+      font-size: 18px;
+      background-color: #FF9900;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #e68a00;
+    }
+    #status {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
-    <h1>AWS One-Click Deploy</h1>
-    <p>Click the button to deploy your GitHub repo to AWS via Lambda & CodePipeline</p>
-    <button id="deployBtn">Deploy to AWS</button>
-    <div id="status"></div>
+  <h1>AWS One-Click Deploy</h1>
+  <button id="deployBtn">Deploy to AWS</button>
+  <div id="status"></div>
 
-    <script>
-        const deployBtn = document.getElementById('deployBtn');
-        const statusDiv = document.getElementById('status');
+  <script>
+    const deployBtn = document.getElementById("deployBtn");
+    const statusDiv = document.getElementById("status");
 
-        deployBtn.addEventListener('click', () => {
-            statusDiv.textContent = "Deploying...";
-            statusDiv.className = "";
+    deployBtn.addEventListener("click", async () => {
+      statusDiv.textContent = "Deploying... Please wait!";
+      try {
+        const response = await fetch(
+          "https://z18blwec7b.execute-api.eu-north-1.amazonaws.com/prod/deploy",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({})
+          }
+        );
 
-            fetch("https://z18blwec7b.execute-api.eu-north-1.amazonaws.com/prod/deploy", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({})
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.body) {
-                    statusDiv.textContent = data.body;
-                    statusDiv.className = "success";
-                } else {
-                    statusDiv.textContent = "Deployment triggered successfully!";
-                    statusDiv.className = "success";
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                statusDiv.textContent = "Error deploying. Check console for details.";
-                statusDiv.className = "error";
-            });
-        });
-    </script>
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        statusDiv.textContent = "Deployment successful!";
+        alert("Response from Lambda: " + JSON.stringify(data));
+      } catch (error) {
+        console.error(error);
+        statusDiv.textContent = "Deployment failed. Check console.";
+        alert("Deployment failed: " + error.message);
+      }
+    });
+  </script>
 </body>
 </html>
